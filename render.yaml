@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: cr-server
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: MQTT_URL
+        sync: false
+      - key: MQTT_USER
+        sync: false
+      - key: MQTT_PASS
+        sync: false
+      - key: MQTT_CMD_TEMPLATE
+        value: devices/{device_id}/cmd
+      - key: MQTT_RESP_WILDCARD
+        value: devices/+/resp
+      - key: READ_TIMEOUT_MS
+        value: 5000
+
