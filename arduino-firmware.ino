@@ -13,10 +13,10 @@ const char* WIFI_PASS = "benchkettle897";
 
 // ---- MQTT broker ----
 const bool USE_TLS = true;
-const char* MQTT_HOST = "849c76960d114c7ab5f1088f0c99936a.s1.eu.hivemq.cloud";  // HiveMQ/EMQX hostname
+const char* MQTT_HOST = "<your-host-name>.s1.eu.hivemq.cloud";  // HiveMQ/EMQX hostname
 const int MQTT_PORT = 8883;
-const char* MQTT_USER = "twilio";
-const char* MQTT_PASS = "twilioSF2008";
+const char* MQTT_USER = "<your-username>";
+const char* MQTT_PASS = "<your-password>";
 
 // ----------------------
 WiFiClientSecure tlsClient;
@@ -27,14 +27,12 @@ PubSubClient mqtt(netClient);
 OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
-String topicCmd = String("devices/") + DEVICE_ID + "/cmd";
-String topicResp = String("devices/") + DEVICE_ID + "/resp";
-String topicHB = String("devices/") + DEVICE_ID + "/heartbeat";
+const String CMD_TOPIC = String("devices/") + DEVICE_ID + "/cmd";
+const String RESP_TOPIC = String("devices/") + DEVICE_ID + "/resp";
+const String HB_TOPIC = String("devices/") + DEVICE_ID + "/heartbeat";
 
 bool mqttWasConnected = false;
 unsigned long lastHb = 0;
-const String CMD_TOPIC = String("devices/") + DEVICE_ID + "/cmd";
-const String HB_TOPIC = String("devices/") + DEVICE_ID + "/heartbeat";
 
 void publishHeartbeat() {
   StaticJsonDocument<128> doc;
@@ -42,10 +40,15 @@ void publishHeartbeat() {
   doc["ts"] = millis() / 1000;
   char buf[128];
   size_t n = serializeJson(doc, buf, sizeof(buf));
-  mqtt.publish(topicHB.c_str(), buf, n);
+  mqtt.publish(HB_TOPIC.c_str(), buf, n);
 }
 
 void handleCmd(char* topic, byte* payload, unsigned int len) {
+  Serial.print("MSG topic: ");
+  Serial.println(topic);
+  Serial.print("Payload: ");
+  Serial.write(payload, len);
+  Serial.println();
   StaticJsonDocument<256> doc;
   if (deserializeJson(doc, payload, len)) return;
 
@@ -66,7 +69,7 @@ void handleCmd(char* topic, byte* payload, unsigned int len) {
 
   char buf[256];
   size_t n = serializeJson(out, buf, sizeof(buf));
-  mqtt.publish(topicResp.c_str(), buf, n);
+  mqtt.publish(RESP_TOPIC.c_str(), buf, n);
 }
 
 void ensureMqtt() {
@@ -77,7 +80,7 @@ void ensureMqtt() {
                 : mqtt.connect(cid.c_str(), MQTT_USER, MQTT_PASS);
 
     if (ok) {
-      mqtt.subscribe(topicCmd.c_str());
+      mqtt.subscribe(CMD_TOPIC.c_str());
       publishHeartbeat();
       Serial.println("MQTT connected");
     } else {
@@ -158,18 +161,19 @@ void setup() {
 
   // ---- MQTT connect ----
   Serial.println("Connecting to MQTT...");
-
-  // Build a unique client ID
   String clientId = "esp32-" + String(DEVICE_ID);
 
-  // Try to connect with username and password
   if (mqtt.connect(clientId.c_str(), MQTT_USER, MQTT_PASS)) {
     Serial.println("MQTT connected!");
-    blinkStatus(5, 100);  // 5 quick = MQTT OK
+    mqttWasConnected = true;            // ← mark connected
+    mqtt.subscribe(CMD_TOPIC.c_str());  // ← subscribe now
+    Serial.print("Subscribed to: ");
+    Serial.println(CMD_TOPIC);
+    blinkStatus(5, 100);
   } else {
     Serial.print("MQTT failed, rc=");
     Serial.println(mqtt.state());
-    blinkStatus(3, 500);  // 3 slow = MQTT fail
+    blinkStatus(3, 500);
   }
 }
 
@@ -198,6 +202,8 @@ void loop() {
         mqttWasConnected = true;
         blinkStatus(5, 100);                // 5 quick = MQTT connected
         mqtt.subscribe(CMD_TOPIC.c_str());  // (re)subscribe to /cmd after reconnect
+        Serial.print("Subscribed to: ");
+        Serial.println(CMD_TOPIC);
       }
     }
   } else {
