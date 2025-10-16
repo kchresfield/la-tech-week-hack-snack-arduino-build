@@ -1,0 +1,21 @@
+{
+  "name": "arduino-build-session",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Kaelyn Chresfield",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.75.0",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "express-ws": "^5.0.2",
+    "mqtt": "^5.14.1",
+    "nanoid": "^5.1.6",
+    "pino": "^10.0.0",
+    "twilio": "^5.10.3"
+  }
+}
