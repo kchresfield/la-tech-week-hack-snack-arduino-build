@@ -8,8 +8,8 @@
 #define DEVICE_ID "kit-001"
 #define ONE_WIRE_BUS 4
 
-const char* WIFI_SSID = "SpectrumSetup-83";
-const char* WIFI_PASS = "benchkettle897";
+const char* WIFI_SSID = "<your-wifi-name>";
+const char* WIFI_PASS = "<your-wifi-password>";
 
 // ---- MQTT broker ----
 const bool USE_TLS = true;
